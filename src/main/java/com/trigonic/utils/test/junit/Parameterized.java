@@ -5,8 +5,9 @@ import static org.junit.Assert.assertTrue;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.runner.Runner;
@@ -27,11 +28,13 @@ public class Parameterized extends Suite {
      */
     public Parameterized(Class<?> testClass) throws Throwable {
         super(testClass, Collections.<Runner>emptyList());
-        List<?> parametersList = getParametersList(getTestClass());
-        assertTrue("No parameters found for " + testClass, parametersList.size() > 0);
+        Iterable<?> parameters = getParameters(getTestClass());
+        Iterator<?> parameterIter = parameters.iterator();
+        assertTrue("No parameters found for " + testClass, parameterIter.hasNext());
         LabelMaker labelMaker = getLabelMaker(getTestClass());
-        for (int i = 0; i < parametersList.size(); ++i) {
-            runners.add(new TestClassRunnerForParameters(getTestClass().getJavaClass(), parametersList, i, labelMaker));
+        int index = 0;
+        while (parameterIter.hasNext()) {
+            runners.add(new TestClassRunnerForParameters(getTestClass().getJavaClass(), parameterIter.next(), index++, labelMaker));
         }
     }
 
@@ -40,17 +43,17 @@ public class Parameterized extends Suite {
         return runners;
     }
 
-    protected List<?> getParametersList(TestClass testClass) throws Throwable {
-        Iterable<?> iterable = (Iterable<?>) getParametersMethod(testClass).invokeExplosively(null);
-        if (iterable instanceof Collection<?>) {
-            return new ArrayList<Object>((Collection<?>) iterable);
+    protected Iterable<?> getParameters(TestClass testClass) throws Throwable {
+        Object parameters = getParametersMethod(testClass).invokeExplosively(null);
+        Iterable<?> result;
+        if (parameters instanceof Iterable<?>) {
+            result = (Iterable<?>) parameters;
+        } else if (parameters.getClass().isArray()) {
+            result = Arrays.asList((Object[]) parameters);
+        } else {
+            result = Arrays.asList(parameters);
         }
-
-        List<Object> arrayList = new ArrayList<Object>();
-        for (Object each : iterable) {
-            arrayList.add(each);
-        }
-        return arrayList;
+        return result;
     }
 
     protected FrameworkMethod getParametersMethod(TestClass testClass) throws Exception {
@@ -59,11 +62,16 @@ public class Parameterized extends Suite {
 
     protected LabelMaker getLabelMaker(TestClass testClass) throws Throwable {
         LabelMaker result;
-        FrameworkMethod method = getLabelMakerFactoryMethod(testClass);
-        if (method != null) {
-            result = (LabelMaker) method.invokeExplosively(null);
+        LabelMakerClass labelMakerClass = testClass.getJavaClass().getAnnotation(LabelMakerClass.class);
+        if (labelMakerClass != null) {
+            result = labelMakerClass.value().newInstance();
         } else {
-            result = new DefaultLabelMaker();
+            FrameworkMethod method = getLabelMakerFactoryMethod(testClass);
+            if (method != null) {
+                result = (LabelMaker) method.invokeExplosively(null);
+            } else {
+                result = new DefaultLabelMaker();
+            }
         }
         return result;
     }

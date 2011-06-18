@@ -1,5 +1,8 @@
 package com.trigonic.utils.test.junit;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.runner.notification.RunNotifier;
@@ -8,20 +11,25 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import com.google.common.collect.Iterators;
+
 public class TestClassRunnerForParameters extends BlockJUnit4ClassRunner {
     private final int index;
     private final Object[] parameters;
     private final LabelMaker labelMaker;
 
-    TestClassRunnerForParameters(Class<?> type, List<?> parameterList, int index, LabelMaker labelMaker)
+    TestClassRunnerForParameters(Class<?> type, Object parameter, int index, LabelMaker labelMaker)
         throws InitializationError {
         super(type);
         this.index = index;
         this.labelMaker = labelMaker;
 
-        Object parameter = parameterList.get(index);
         if (parameter.getClass().isArray()) {
             parameters = (Object[]) parameter;
+        } else if (parameter instanceof Collection) {
+            this.parameters = new ArrayList<Object>((Collection<?>) parameter).toArray();
+        } else if (parameter instanceof Iterable) {
+            this.parameters = Iterators.toArray((Iterator<?>) parameter, Object.class);
         } else {
             parameters = new Object[] { parameter };
         }
@@ -29,9 +37,6 @@ public class TestClassRunnerForParameters extends BlockJUnit4ClassRunner {
         if (labelMaker == null) {
             throw new NullPointerException("LabelMaker required");
         }
-
-        // force IndexOutOfBoundsException if appropriate
-        parameterList.get(index);
     }
 
     @Override
