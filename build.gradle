@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 
 group = 'com.trigonic'
 artifact = 'test-utils'
-version = '0.2'
+version = '0.3'
 
 def props = new Properties();
 def localProperties = new File("local.properties")
@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     compile 'junit:junit:4.+'
-    compile 'com.google.collections:google-collections:1.0'
+    compile 'com.google.guava:guava:r09'
 
     deployerJars 'org.apache.maven.wagon:wagon-http:1.0-beta-7'
 }

@@ -1,19 +1,26 @@
 package com.trigonic.utils.test.junit;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.runner.Runner;
 import org.junit.runners.Suite;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 /**
  * Similar to {@link org.junit.runners.Parameterized} but allows for readable labels and easier parameter specification.  A public
@@ -28,13 +35,11 @@ public class Parameterized extends Suite {
      */
     public Parameterized(Class<?> testClass) throws Throwable {
         super(testClass, Collections.<Runner>emptyList());
-        Iterable<?> parameters = getParameters(getTestClass());
-        Iterator<?> parameterIter = parameters.iterator();
-        assertTrue("No parameters found for " + testClass, parameterIter.hasNext());
+        List<List<Object>> parameters = getParameters(getTestClass());
+        assertFalse("No parameters found for " + testClass, parameters.size() == 0);
         LabelMaker labelMaker = getLabelMaker(getTestClass());
-        int index = 0;
-        while (parameterIter.hasNext()) {
-            runners.add(new TestClassRunnerForParameters(getTestClass().getJavaClass(), parameterIter.next(), index++, labelMaker));
+        for (int index = 0; index < parameters.size(); ++index) {
+            runners.add(new TestClassRunnerForParameters(getTestClass().getJavaClass(), parameters.get(index), index, labelMaker));
         }
     }
 
@@ -43,21 +48,57 @@ public class Parameterized extends Suite {
         return runners;
     }
 
-    protected Iterable<?> getParameters(TestClass testClass) throws Throwable {
-        Object parameters = getParametersMethod(testClass).invokeExplosively(null);
-        Iterable<?> result;
+    protected List<List<Object>> getParameters(TestClass testClass) throws Throwable {
+        List<List<Object>> result = null;
+        for (FrameworkMethod method : getParametersMethods(testClass)) {
+            List<List<Object>> parameters = getParameters(method);
+            if (result == null) {
+                result = parameters;
+            } else {
+                result = new ListCartesianProduct<Object>(parameters, result);
+            }
+        }
+        return result;
+    }
+    
+    protected List<List<Object>> getParameters(FrameworkMethod method) throws Throwable {
+        Object parameters = method.invokeExplosively(null);
+        List<List<Object>> parametersList;
         if (parameters instanceof Iterable<?>) {
-            result = (Iterable<?>) parameters;
+            parametersList = toParameterList((Iterable<?>) parameters);
         } else if (parameters.getClass().isArray()) {
-            result = Arrays.asList((Object[]) parameters);
+            parametersList = toParameterList(Arrays.asList((Object[]) parameters));
         } else {
-            result = Arrays.asList(parameters);
+            parametersList = toParameterList(Arrays.asList(parameters));
+        }
+        return parametersList;
+    }
+    
+    protected List<List<Object>> toParameterList(Iterable<?> parameters) {
+        List<List<Object>> result = new ArrayList<List<Object>>();
+        for (Object value : parameters) {
+            List<Object> row;
+            if (value instanceof Iterable<?>) {
+                row = Lists.newArrayList((Iterable) value);
+            } else if (value.getClass().isArray()) {
+                row = Arrays.asList((Object[]) value);
+            } else {
+                row = Arrays.asList(value);
+            }
+            result.add(row);
         }
         return result;
     }
 
-    protected FrameworkMethod getParametersMethod(TestClass testClass) throws Exception {
-        return getPublicStaticAnnotatedMethod(testClass, Parameters.class, true);
+    protected Collection<FrameworkMethod> getParametersMethods(TestClass testClass) throws Exception {
+        return Collections2.filter(testClass.getAnnotatedMethods(Parameters.class), new PublicStaticFrameworkMethod());
+    }
+    
+    public static class PublicStaticFrameworkMethod implements Predicate<FrameworkMethod> {
+        public boolean apply(FrameworkMethod method) {
+            int modifiers = method.getMethod().getModifiers();
+            return (Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers));
+        }
     }
 
     protected LabelMaker getLabelMaker(TestClass testClass) throws Throwable {
