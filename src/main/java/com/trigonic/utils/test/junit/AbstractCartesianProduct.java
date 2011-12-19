@@ -22,6 +22,7 @@ public abstract class AbstractCartesianProduct<T, E> extends AbstractList<E> {
         return combine(head.get(headIndex), tail.get(tailIndex));
     }
     
+    @SuppressWarnings("hiding")
     protected abstract E combine(T head, T tail); 
 
     @Override

@@ -9,9 +9,24 @@ Collecting some helpful testing-related utilities.
     }
 
     dependencies {
-        classpath 'com.trigonic:test-utils:0.2'
+        classpath 'com.trigonic:test-utils:0.4'
     }
 
+## JUnit Test Suite Discovery
+
+In addition to JUnit's built-in `@SuiteClasses` annotation, the Suite extension provided by this project allows
+you to specify `@SuiteBaseClass` to allow runtime scanning for components to the test suite:
+
+    import com.trigonic.utils.test.junit.SuiteBaseClass;
+
+    @RunWith(Suite.class)
+    @SuiteBaseClass(MyTestBase.class)
+    public class SomeSuite {
+        ...
+    }
+
+This will search for subclasses of the specified base class to include in the suite, by default looking under the
+same package as that base class.
 
 ## Enhanced JUnit Test Parameterization
 
@@ -71,4 +86,22 @@ You can also just specify the LabelMaker class to use, if it doesn't require any
     public class SomeTest {
         ...
     }
+
+## Delayed Evaluation of Asserts
+
+Rather than sleeping a fixed (maximum amount) and then asserting a condition, it's often more efficient to poll
+that condition and timeout after that maximum amount of time has elapsed:
+
+    import com.trigonic.utils.test.junit.DelayedAssert;
+    ....
+    DelayedAssert.assertEqualsAfter(expected, timeout, [pollInterval,] new Callable() { ... });
+
+Also available are `assertNotEqualsAfter`, `assertTrueAfter`, `assertFalseAfter`, `assertSameAfter`,
+`assertDifferentAfter`, `assertNullAfter`, and `assertNotNullAfter`.
+
+This is even easier in Groovy in that you can directly use a closure:
+
+    import static com.trigonic.utils.test.junit.DelayedAssert.*
+    ....
+    assertEqualsAfter(expected, timeout) { valueToTest }
 
