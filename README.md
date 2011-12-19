@@ -9,9 +9,24 @@ Collecting some helpful testing-related utilities.
     }
 
     dependencies {
-        classpath 'com.trigonic:test-utils:0.2'
+        classpath 'com.trigonic:test-utils:0.4'
     }
 
+## JUnit Test Suite Discovery
+
+In addition to JUnit's built-in `@SuiteClasses` annotation, the Suite extension provided by this project allows
+you to specify `@SuiteBaseClass` to allow runtime scanning for components to the test suite:
+
+    import com.trigonic.utils.test.junit.SuiteBaseClass;
+
+    @RunWith(Suite.class)
+    @SuiteBaseClass(MyTestBase.class)
+    public class SomeSuite {
+        ...
+    }
+
+This will search for subclasses of the specified base class to include in the suite, by default looking under the
+same package as that base class.
 
 ## Enhanced JUnit Test Parameterization
 
