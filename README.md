@@ -87,3 +87,21 @@ You can also just specify the LabelMaker class to use, if it doesn't require any
         ...
     }
 
+## Delayed Evaluation of Asserts
+
+Rather than sleeping a fixed (maximum amount) and then asserting a condition, it's often more efficient to poll
+that condition and timeout after that maximum amount of time has elapsed:
+
+    import com.trigonic.utils.test.junit.DelayedAssert;
+    ....
+    DelayedAssert.assertEqualsAfter(expected, timeout, [pollInterval,] new Callable() { ... });
+
+Also available are `assertNotEqualsAfter`, `assertTrueAfter`, `assertFalseAfter`, `assertSameAfter`,
+`assertDifferentAfter`, `assertNullAfter`, and `assertNotNullAfter`.
+
+This is even easier in Groovy in that you can directly use a closure:
+
+    import static com.trigonic.utils.test.junit.DelayedAssert.*
+    ....
+    assertEqualsAfter(expected, timeout) { valueToTest }
+
