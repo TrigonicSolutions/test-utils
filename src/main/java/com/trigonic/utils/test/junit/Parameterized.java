@@ -1,7 +1,6 @@
 package com.trigonic.utils.test.junit;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -9,10 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.runner.Runner;
 import org.junit.runners.Suite;
 import org.junit.runners.model.FrameworkMethod;
@@ -79,7 +76,7 @@ public class Parameterized extends Suite {
         for (Object value : parameters) {
             List<Object> row;
             if (value instanceof Iterable<?>) {
-                row = Lists.newArrayList((Iterable) value);
+                row = Lists.newArrayList((Iterable<?>) value);
             } else if (value.getClass().isArray()) {
                 row = Arrays.asList((Object[]) value);
             } else {

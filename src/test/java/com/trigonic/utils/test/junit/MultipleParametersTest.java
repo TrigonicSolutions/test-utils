@@ -15,6 +15,7 @@ public class MultipleParametersTest extends MultipleParametersBaseTest {
     @LabelMakerFactory
     public static LabelMaker getLabelMaker() {
         return new DefaultLabelMaker(":") {
+            @Override
             public String getLabel(int index, Object[] parameters) {
                 StringBuilder builder = new StringBuilder();
                 for (Object parameter : parameters) {
