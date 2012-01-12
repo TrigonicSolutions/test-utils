@@ -70,7 +70,7 @@ uploadArchives {
             name 'test-utils - Test Utilities'
             packaging 'jar'
             description 'Provides utilities for testing'
-            url 'https://github.com/AlanKrueger/test-utils'
+            url 'https://github.com/TrigonicSolutions/test-utils'
             inceptionYear '2011'
 
             parent {
@@ -80,8 +80,8 @@ uploadArchives {
             }
      
             scm {
-                url 'scm:git://github.com/AlanKrueger/test-utils.git'
-                connection 'scm:git://github.com/AlanKrueger/test-utils.git'
+                url 'scm:git://github.com/TrigonicSolutions/test-utils.git'
+                connection 'scm:git://github.com/TrigonicSolutions/test-utils.git'
             }
      
             licenses {
