@@ -1,6 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
-apply plugin: 'sign'
+apply plugin: 'signing'
 apply plugin: 'eclipse'
 
 group = 'com.trigonic'
@@ -10,19 +10,10 @@ version = '0.5'
 def props = new Properties();
 def localProperties = new File("local.properties")
 if (localProperties.exists()) localProperties.withInputStream { props.load(it) }
+props.each { project.setProperty(it.key, it.value) }
 
 configurations {
     deployerJars
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'de.huxhorn.gradle:de.huxhorn.gradle.pgp-plugin:0.0.3'
-    }
 }
 
 repositories {
@@ -49,19 +40,21 @@ task packageSources(type: Jar) {
 }
 
 artifacts {
+    archives jar
     archives packageJavadoc
     archives packageSources
 }
 
-pgp {
-    secretKeyRingFile = new File("${System.properties['user.home']}/.gnupg/secring.gpg")
-    keyId = props.get('sign.key.id')
-    password = props.get('sign.key.password')
+signing {
+    sign configurations.archives
 }
 
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.deployerJars
+
+        beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
+
         repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2') {
             authentication(userName: props.get('maven.repository.user'), password: props.get('maven.repository.password'))
         }
@@ -70,7 +63,7 @@ uploadArchives {
             name 'test-utils - Test Utilities'
             packaging 'jar'
             description 'Provides utilities for testing'
-            url 'https://github.com/AlanKrueger/test-utils'
+            url 'https://github.com/TrigonicSolutions/test-utils'
             inceptionYear '2011'
 
             parent {
@@ -80,8 +73,8 @@ uploadArchives {
             }
      
             scm {
-                url 'scm:git://github.com/AlanKrueger/test-utils.git'
-                connection 'scm:git://github.com/AlanKrueger/test-utils.git'
+                url 'scm:git://github.com/TrigonicSolutions/test-utils.git'
+                connection 'scm:git://github.com/TrigonicSolutions/test-utils.git'
             }
      
             licenses {
@@ -108,6 +101,6 @@ uploadArchives {
 }
 
 task createWrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-3'
+    gradleVersion = '1.0-milestone-6'
 }
 
