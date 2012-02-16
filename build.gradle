@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 
 group = 'com.trigonic'
 artifact = 'test-utils'
-version = '0.5'
+version = '0.6'
 
 def props = new Properties();
 def localProperties = new File("local.properties")
@@ -18,13 +18,13 @@ configurations {
 
 repositories {
     mavenCentral()
-    mavenRepo urls: 'http://reflections.googlecode.com/svn/repo'
+    mavenLocal()
 }
 
 dependencies {
     compile 'junit:junit:4.+'
-    compile 'com.google.guava:guava:r09'
-    compile 'org.reflections:reflections:0.9.6'
+    compile 'com.google.guava:guava:11.0.1'
+    compile 'org.springframework:spring-core:3.1.0.RELEASE'
 
     deployerJars 'org.apache.maven.wagon:wagon-http:1.0-beta-7'
 }
@@ -101,6 +101,6 @@ uploadArchives {
 }
 
 task createWrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-6'
+    gradleVersion = '1.0-milestone-8'
 }
 

@@ -9,7 +9,7 @@ Collecting some helpful testing-related utilities.
     }
 
     dependencies {
-        classpath 'com.trigonic:test-utils:0.5'
+        classpath 'com.trigonic:test-utils:0.6'
     }
 
 ## JUnit Test Suite Discovery
