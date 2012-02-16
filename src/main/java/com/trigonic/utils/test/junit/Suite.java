@@ -1,15 +1,23 @@
 package com.trigonic.utils.test.junit;
 
+import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
-
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.SystemPropertyUtils;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
@@ -41,8 +49,7 @@ public class Suite extends org.junit.runners.Suite {
             if (packageName.isEmpty()) {
                 packageName = baseClassAnnotation.packageName();
             }
-            Reflections reflections = new Reflections(packageName, new SubTypesScanner());
-            results.addAll(reflections.getSubTypesOf(baseClassAnnotation.value()));
+            results.addAll(getSubTypesOf(baseClassAnnotation.value(), packageName));
         }
 
         results = Sets.filter(results, new IsConcreteClass());
@@ -54,7 +61,37 @@ public class Suite extends org.junit.runners.Suite {
 
         return results.toArray(new Class<?>[results.size()]);
     }
+    
+    protected static List<Class<?>> getSubTypesOf(Class<?> baseClass, String packageName) throws InitializationError {
+        List<Class<?>> candidates = new ArrayList<Class<?>>();
 
+        ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+        MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
+        String resourcePath = ClassUtils.convertClassNameToResourcePath(SystemPropertyUtils.resolvePlaceholders(packageName));
+        String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + resourcePath + "/**/*.class";
+        
+        try {
+            Resource[] resources = resourcePatternResolver.getResources(packageSearchPath);
+            for (Resource resource : resources) {
+                if (resource.isReadable()) {
+                    try {
+                        MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
+                        Class<?> candidate = Class.forName(metadataReader.getClassMetadata().getClassName());
+                        if (baseClass.isAssignableFrom(candidate)) {
+                            candidates.add(candidate);
+                        }
+                    } catch(Exception e){
+                        // skip this resource
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new InitializationError(e);
+        }
+        
+        return candidates;
+    }
+    
     protected static class IsConcreteClass implements Predicate<Class<?>> {
         public boolean apply(Class<?> input) {
             return !Modifier.isAbstract(input.getModifiers());
