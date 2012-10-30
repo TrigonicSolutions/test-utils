@@ -6,10 +6,6 @@ apply plugin: 'eclipse'
 group = 'com.trigonic'
 version = '0.6'
 
-project.ext {
-    springVersion = '3.1.2.RELEASE'
-}
-
 def props = new Properties();
 def localProperties = new File("local.properties")
 if (localProperties.exists()) localProperties.withInputStream { props.load(it) }
@@ -27,7 +23,7 @@ repositories {
 dependencies {
     compile 'junit:junit:4.+'
     compile 'com.google.guava:guava:13.0'
-    compile "org.springframework:spring-core:${springVersion}"
+    compile "org.springframework:spring-core:3.1.2.RELEASE"
 
     deployerJars 'org.apache.maven.wagon:wagon-http:1.0-beta-7'
 }
@@ -104,6 +100,6 @@ uploadArchives {
 }
 
 task createWrapper(type: Wrapper) {
-    gradleVersion = '1.0'
+    gradleVersion = '1.2'
 }
 
